@@ -17,36 +17,18 @@ namespace VictorBush.Ego.NefsLib.Tests.Header
             var items = new NefsItemList(@"C:\archive.nefs");
 
             var file1DataSource = new NefsItemListDataSource(items, 123, new NefsItemSize(456, new List<UInt32> { 11, 12, 13 }));
-            var file1UnknownData = new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = 1,
-                Part6Unknown0x01 = 2,
-                Part6Unknown0x02 = 3,
-                Part6Unknown0x03 = 4,
-            };
-            var file1 = new NefsItem(new NefsItemId(0), "file1", new NefsItemId(0), NefsItemType.File, file1DataSource, file1UnknownData);
+            var file1Flags = Part6Flags.IsTransformed | Part6Flags.IsCacheable;
+            var file1 = new NefsItem(new NefsItemId(0), "file1", new NefsItemId(0), file1DataSource, file1Flags);
             items.Add(file1);
 
             var file2DataSource = new NefsItemListDataSource(items, 456, new NefsItemSize(789, new List<UInt32> { 14, 15, 16 }));
-            var file2UnknownData = new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = 7,
-                Part6Unknown0x01 = 8,
-                Part6Unknown0x02 = 9,
-                Part6Unknown0x03 = 10,
-            };
-            var file2 = new NefsItem(new NefsItemId(1), "file2", new NefsItemId(1), NefsItemType.File, file2DataSource, file2UnknownData);
+            var file2Flags = Part6Flags.IsCacheable;
+            var file2 = new NefsItem(new NefsItemId(1), "file2", new NefsItemId(1), file2DataSource, file2Flags);
             items.Add(file2);
 
             var dir1DataSource = new NefsEmptyDataSource();
-            var dir1UnknownData = new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = 13,
-                Part6Unknown0x01 = 14,
-                Part6Unknown0x02 = 15,
-                Part6Unknown0x03 = 16,
-            };
-            var dir1 = new NefsItem(new NefsItemId(2), "dir1", new NefsItemId(2), NefsItemType.Directory, dir1DataSource, dir1UnknownData);
+            var dir1Flags = Part6Flags.IsDirectory;
+            var dir1 = new NefsItem(new NefsItemId(2), "dir1", new NefsItemId(2), dir1DataSource, dir1Flags);
             items.Add(dir1);
 
             var p6 = new NefsHeaderPart6(items);
@@ -57,28 +39,31 @@ namespace VictorBush.Ego.NefsLib.Tests.Header
             file1
             */
 
-            Assert.Equal(1, p6.EntriesById[file1.Id].Byte0);
-            Assert.Equal(2, p6.EntriesById[file1.Id].Byte1);
-            Assert.Equal(3, p6.EntriesById[file1.Id].Byte2);
-            Assert.Equal(4, p6.EntriesById[file1.Id].Byte3);
+            Assert.True(p6.EntriesById[file1.Id].IsCacheable);
+            Assert.False(p6.EntriesById[file1.Id].IsDirectory);
+            Assert.False(p6.EntriesById[file1.Id].IsDuplicated);
+            Assert.False(p6.EntriesById[file1.Id].IsPatched);
+            Assert.True(p6.EntriesById[file1.Id].IsTransformed);
 
             /*
             file2
             */
 
-            Assert.Equal(7, p6.EntriesById[file2.Id].Byte0);
-            Assert.Equal(8, p6.EntriesById[file2.Id].Byte1);
-            Assert.Equal(9, p6.EntriesById[file2.Id].Byte2);
-            Assert.Equal(10, p6.EntriesById[file2.Id].Byte3);
+            Assert.True(p6.EntriesById[file2.Id].IsCacheable);
+            Assert.False(p6.EntriesById[file2.Id].IsDirectory);
+            Assert.False(p6.EntriesById[file2.Id].IsDuplicated);
+            Assert.False(p6.EntriesById[file2.Id].IsPatched);
+            Assert.False(p6.EntriesById[file2.Id].IsTransformed);
 
             /*
             dir1
             */
 
-            Assert.Equal(13, p6.EntriesById[dir1.Id].Byte0);
-            Assert.Equal(14, p6.EntriesById[dir1.Id].Byte1);
-            Assert.Equal(15, p6.EntriesById[dir1.Id].Byte2);
-            Assert.Equal(16, p6.EntriesById[dir1.Id].Byte3);
+            Assert.False(p6.EntriesById[dir1.Id].IsCacheable);
+            Assert.True(p6.EntriesById[dir1.Id].IsDirectory);
+            Assert.False(p6.EntriesById[dir1.Id].IsDuplicated);
+            Assert.False(p6.EntriesById[dir1.Id].IsPatched);
+            Assert.False(p6.EntriesById[dir1.Id].IsTransformed);
         }
 
         [Fact]

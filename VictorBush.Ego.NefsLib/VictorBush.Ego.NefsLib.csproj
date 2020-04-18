@@ -84,8 +84,6 @@
     <Compile Include="Source\Item\NefsItemList.cs" />
     <Compile Include="Source\Item\NefsItemSize.cs" />
     <Compile Include="Source\Item\NefsItemState.cs" />
-    <Compile Include="Source\Item\NefsItemType.cs" />
-    <Compile Include="Source\Item\NefsItemUnknownData.cs" />
     <Compile Include="Source\NefsArchive.cs" />
     <Compile Include="Source\NefsArchiveSource.cs" />
     <Compile Include="Source\NefsLog.cs" />

@@ -516,17 +516,11 @@ namespace VictorBush.Ego.NefsLib.Tests.NefsLib.IO
 
             var e1 = part6.EntriesByIndex[0];
             Assert.Same(e1, part6.EntriesById[e1.Id]);
-            Assert.Equal(0x11, e1.Byte0);
-            Assert.Equal(0x12, e1.Byte1);
-            Assert.Equal(0x13, e1.Byte2);
-            Assert.Equal(0x14, e1.Byte3);
+            Assert.Equal(0x14131211U, e1.Data0x00_BitField.Value);
 
             var e2 = part6.EntriesByIndex[1];
             Assert.Same(e2, part6.EntriesById[e2.Id]);
-            Assert.Equal(0x21, e2.Byte0);
-            Assert.Equal(0x22, e2.Byte1);
-            Assert.Equal(0x23, e2.Byte2);
-            Assert.Equal(0x24, e2.Byte3);
+            Assert.Equal(0x24232221U, e2.Data0x00_BitField.Value);
         }
 
         [Fact]

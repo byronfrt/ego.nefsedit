@@ -2,8 +2,46 @@
 
 namespace VictorBush.Ego.NefsLib.Header
 {
+    using System;
     using VictorBush.Ego.NefsLib.DataTypes;
     using VictorBush.Ego.NefsLib.Item;
+
+    /// <summary>
+    /// Bitfield flags for part 6 data.
+    /// </summary>
+    [Flags]
+    public enum Part6Flags
+    {
+        /// <summary>
+        /// No flags set.
+        /// </summary>
+        None = 0x0,
+
+        /// <summary>
+        /// Indicates if item is transformed (I think this means encrypted?)
+        /// </summary>
+        IsTransformed = 0x1,
+
+        /// <summary>
+        /// Indicates if item is a directory.
+        /// </summary>
+        IsDirectory = 0x2,
+
+        /// <summary>
+        /// Meaning unknown.
+        /// </summary>
+        IsDuplicated = 0x4,
+
+        /// <summary>
+        /// Indicates if item is cacheable by game engine.
+        /// </summary>
+        IsCacheable = 0x8,
+
+        /// <summary>
+        /// Meaning unknown.
+        /// </summary>
+        IsPatched = 0x20,
+    }
 
     /// <summary>
     /// An entry in header part 6 for an item in an archive.
@@ -19,30 +57,12 @@ namespace VictorBush.Ego.NefsLib.Header
         /// Initializes a new instance of the <see cref="NefsHeaderPart6Entry"/> class.
         /// </summary>
         /// <param name="id">The item id this entry is for.</param>
-        public NefsHeaderPart6Entry(NefsItemId id)
+        /// <param name="flags">Flags.</param>
+        public NefsHeaderPart6Entry(NefsItemId id, Part6Flags flags)
         {
             this.Id = id;
+            this.Data0x00_BitField.Value = (uint)flags;
         }
-
-        /// <summary>
-        /// Unknown data.
-        /// </summary>
-        public byte Byte0 => this.Data0x00_Byte0.Value[0];
-
-        /// <summary>
-        /// Unknown data.
-        /// </summary>
-        public byte Byte1 => this.Data0x01_Byte1.Value[0];
-
-        /// <summary>
-        /// Unknown data.
-        /// </summary>
-        public byte Byte2 => this.Data0x02_Byte2.Value[0];
-
-        /// <summary>
-        /// Unknown data.
-        /// </summary>
-        public byte Byte3 => this.Data0x03_Byte3.Value[0];
 
         /// <summary>
         /// Gets the item id this is for. This value is not written in the header but is stored here
@@ -51,27 +71,34 @@ namespace VictorBush.Ego.NefsLib.Header
         public NefsItemId Id { get; }
 
         /// <summary>
+        /// A flag indicating whether this item is cacheable (presumably by the game engine).
+        /// </summary>
+        public bool IsCacheable => (this.Data0x00_BitField.Value & (int)Part6Flags.IsCacheable) > 0;
+
+        /// <summary>
+        /// A flag indicating whether this item is a directory.
+        /// </summary>
+        public bool IsDirectory => (this.Data0x00_BitField.Value & (int)Part6Flags.IsDirectory) > 0;
+
+        /// <summary>
+        /// A flag indicating whether this item is duplicated.
+        /// </summary>
+        public bool IsDuplicated => (this.Data0x00_BitField.Value & (int)Part6Flags.IsDuplicated) > 0;
+
+        /// <summary>
+        /// A flag indicating whether this item is patched (meaning unknown).
+        /// </summary>
+        public bool IsPatched => (this.Data0x00_BitField.Value & (int)Part6Flags.IsCacheable) > 0;
+
+        /// <summary>
+        /// A flag indicating whether this item is transformed (meaning unknown).
+        /// </summary>
+        public bool IsTransformed => (this.Data0x00_BitField.Value & (int)Part6Flags.IsTransformed) > 0;
+
+        /// <summary>
         /// Data at offset 0x00.
         /// </summary>
         [FileData]
-        internal ByteArrayType Data0x00_Byte0 { get; } = new ByteArrayType(0x00, 0x01);
-
-        /// <summary>
-        /// Data at offset 0x01.
-        /// </summary>
-        [FileData]
-        internal ByteArrayType Data0x01_Byte1 { get; } = new ByteArrayType(0x01, 0x01);
-
-        /// <summary>
-        /// Data at offset 0x02.
-        /// </summary>
-        [FileData]
-        internal ByteArrayType Data0x02_Byte2 { get; } = new ByteArrayType(0x02, 0x01);
-
-        /// <summary>
-        /// Data at offset 0x03.
-        /// </summary>
-        [FileData]
-        internal ByteArrayType Data0x03_Byte3 { get; } = new ByteArrayType(0x03, 0x01);
+        internal UInt32Type Data0x00_BitField { get; } = new UInt32Type(0x00);
     }
 }

@@ -90,7 +90,7 @@ namespace VictorBush.Ego.NefsLib.Header
         /// <returns>The list of chunk sizes.</returns>
         public List<UInt32> GetChunkSizesForItem(NefsItem item)
         {
-            if (item.Type == NefsItemType.Directory)
+            if (item.IsDirectory)
             {
                 // Item is a directory; no chunk sizes
                 return new List<UInt32>();
@@ -119,7 +119,7 @@ namespace VictorBush.Ego.NefsLib.Header
         public UInt32 GetIndexForItem(NefsItem item)
         {
             // Get index to part 4
-            if (item.Type == NefsItemType.Directory)
+            if (item.IsDirectory)
             {
                 // Item is a directory; the index 0
                 return 0;

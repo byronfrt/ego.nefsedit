@@ -17,30 +17,22 @@ namespace VictorBush.Ego.NefsLib.Item
         /// <param name="id">The item id (index).</param>
         /// <param name="fileName">The file name within the archive.</param>
         /// <param name="directoryId">The directory id the item is in.</param>
-        /// <param name="type">The type of item.</param>
         /// <param name="dataSource">The data source for the item's data.</param>
-        /// <param name="unknownData">Unknown metadata.</param>
+        /// <param name="flags">Item attributes bitfield from header part 6.</param>
         /// <param name="state">The item state.</param>
         public NefsItem(
             NefsItemId id,
             string fileName,
             NefsItemId directoryId,
-            NefsItemType type,
             INefsDataSource dataSource,
-            NefsItemUnknownData unknownData,
+            Part6Flags flags,
             NefsItemState state = NefsItemState.None)
         {
             this.Id = id;
             this.DirectoryId = directoryId;
-            this.Type = type;
             this.DataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
             this.State = state;
-
-            // Unknown data
-            this.Part6Unknown0x00 = unknownData.Part6Unknown0x00;
-            this.Part6Unknown0x01 = unknownData.Part6Unknown0x01;
-            this.Part6Unknown0x02 = unknownData.Part6Unknown0x02;
-            this.Part6Unknown0x03 = unknownData.Part6Unknown0x03;
+            this.Flags = flags;
 
             // Save file name
             this.FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
@@ -73,40 +65,45 @@ namespace VictorBush.Ego.NefsLib.Item
         public string FileName { get; }
 
         /// <summary>
+        /// The attribute flags from header part 6.
+        /// </summary>
+        public Part6Flags Flags { get; }
+
+        /// <summary>
         /// The id of this item.
         /// </summary>
         public NefsItemId Id { get; }
 
         /// <summary>
-        /// Unknown data in the part 6 entry.
+        /// A flag indicating whether this item is cacheable (presumably by the game engine).
         /// </summary>
-        public byte Part6Unknown0x00 { get; }
+        public bool IsCacheable => this.Flags.HasFlag(Part6Flags.IsCacheable);
 
         /// <summary>
-        /// Unknown data in the part 6 entry.
+        /// A flag indicating whether this item is a directory.
         /// </summary>
-        public byte Part6Unknown0x01 { get; }
+        public bool IsDirectory => this.Flags.HasFlag(Part6Flags.IsDirectory);
 
         /// <summary>
-        /// Unknown data in the part 6 entry.
+        /// A flag indicating whether this item is duplicated.
         /// </summary>
-        public byte Part6Unknown0x02 { get; }
+        public bool IsDuplicated => this.Flags.HasFlag(Part6Flags.IsDuplicated);
 
         /// <summary>
-        /// Unknown data in the part 6 entry.
+        /// A flag indicating whether this item is patched (meaning unknown).
         /// </summary>
-        public byte Part6Unknown0x03 { get; }
+        public bool IsPatched => this.Flags.HasFlag(Part6Flags.IsCacheable);
+
+        /// <summary>
+        /// A flag indicating whether this item is transformed (meaning unknown).
+        /// </summary>
+        public bool IsTransformed => this.Flags.HasFlag(Part6Flags.IsTransformed);
 
         /// <summary>
         /// The modification state of the item. Represents any pending changes to this item. Pending
         /// changes are applied when the archive is saved.
         /// </summary>
         public NefsItemState State { get; private set; }
-
-        /// <summary>
-        /// The type of item this is.
-        /// </summary>
-        public NefsItemType Type { get; }
 
         /// <summary>
         /// Creates an item from header data.
@@ -119,16 +116,7 @@ namespace VictorBush.Ego.NefsLib.Item
         {
             var p1 = header.Part1.EntriesById[id];
             var p2 = header.Part2.EntriesById[id];
-
-            // Check if part 6 exists
-            NefsHeaderPart6Entry p6 = null;
-            if (header.Part6.EntriesById.ContainsKey(id))
-            {
-                p6 = header.Part6.EntriesById[id];
-            }
-
-            // Determine type
-            var type = p2.Data0x0c_ExtractedSize.Value == 0 ? NefsItemType.Directory : NefsItemType.File;
+            var p6 = header.Part6.EntriesById[id];
 
             // Find parent
             var parentId = header.GetItemDirectoryId(id);
@@ -137,9 +125,12 @@ namespace VictorBush.Ego.NefsLib.Item
             var dataOffset = p1.Data0x00_OffsetToData.Value;
             var extractedSize = p2.Data0x0c_ExtractedSize.Value;
 
+            // Flags
+            var flags = (Part6Flags)p6.Data0x00_BitField.Value;
+
             // Data source
             INefsDataSource dataSource;
-            if (type == NefsItemType.Directory)
+            if (flags.HasFlag(Part6Flags.IsDirectory))
             {
                 // Item is a directory
                 dataSource = new NefsEmptyDataSource();
@@ -161,17 +152,8 @@ namespace VictorBush.Ego.NefsLib.Item
             // File name and path
             var fileName = header.GetItemFileName(id);
 
-            // Gather unknown metadata
-            var unknown = new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = p6?.Byte0 ?? 0,
-                Part6Unknown0x01 = p6?.Byte1 ?? 0,
-                Part6Unknown0x02 = p6?.Byte2 ?? 0,
-                Part6Unknown0x03 = p6?.Byte3 ?? 0,
-            };
-
             // Create item
-            return new NefsItem(id, fileName, parentId, type, dataSource, unknown);
+            return new NefsItem(id, fileName, parentId, dataSource, flags);
         }
 
         /// <summary>
@@ -180,21 +162,12 @@ namespace VictorBush.Ego.NefsLib.Item
         /// <returns>A new <see cref="NefsItem"/>.</returns>
         public object Clone()
         {
-            var unknownData = new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = this.Part6Unknown0x00,
-                Part6Unknown0x01 = this.Part6Unknown0x01,
-                Part6Unknown0x02 = this.Part6Unknown0x02,
-                Part6Unknown0x03 = this.Part6Unknown0x03,
-            };
-
             return new NefsItem(
                 this.Id,
                 this.FileName,
                 this.DirectoryId,
-                this.Type,
                 this.DataSource,
-                unknownData,
+                this.Flags,
                 state: this.State);
         }
 
@@ -207,7 +180,7 @@ namespace VictorBush.Ego.NefsLib.Item
         /// <param name="state">The new item state.</param>
         public void UpdateDataSource(INefsDataSource dataSource, NefsItemState state)
         {
-            if (this.Type == NefsItemType.Directory)
+            if (this.IsDirectory)
             {
                 throw new InvalidOperationException($"Cannot perform {nameof(this.UpdateDataSource)} on a directory.");
             }

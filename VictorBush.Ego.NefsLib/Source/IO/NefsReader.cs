@@ -752,7 +752,7 @@ namespace VictorBush.Ego.NefsLib.IO
                         continue;
                     }
 
-                    var entry = new NefsHeaderPart6Entry(id);
+                    var entry = new NefsHeaderPart6Entry(id, Part6Flags.None);
                     await FileData.ReadDataAsync(stream, entryOffset, entry, p);
 
                     ids.Add(id);

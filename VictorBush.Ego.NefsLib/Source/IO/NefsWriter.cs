@@ -260,7 +260,7 @@ namespace VictorBush.Ego.NefsLib.IO
             }
 
             // Nothing to do for directories
-            if (item.Type == NefsItemType.Directory)
+            if (item.IsDirectory)
             {
                 return;
             }
@@ -631,7 +631,7 @@ namespace VictorBush.Ego.NefsLib.IO
             }
 
             // Nothing to write for directories
-            if (item.Type == NefsItemType.Directory)
+            if (item.IsDirectory)
             {
                 return dataOffset;
             }

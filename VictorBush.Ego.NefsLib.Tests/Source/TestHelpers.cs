@@ -7,6 +7,7 @@ namespace VictorBush.Ego.NefsLib.Tests
     using System.IO.Abstractions.TestingHelpers;
     using System.Linq;
     using VictorBush.Ego.NefsLib.DataSource;
+    using VictorBush.Ego.NefsLib.Header;
     using VictorBush.Ego.NefsLib.Item;
 
     internal static class TestHelpers
@@ -48,7 +49,7 @@ namespace VictorBush.Ego.NefsLib.Tests
         /// <param name="dataOffset">Data offset.</param>
         /// <param name="extractedSize">Extracted size.</param>
         /// <param name="chunkSizes">Compressed chunks sizes.</param>
-        /// <param name="type">The item type.</param>
+        /// <param name="isDirectory">Whether the item is a directory.</param>
         /// <returns>The new item.</returns>
         internal static NefsItem CreateItem(
             uint id,
@@ -57,7 +58,7 @@ namespace VictorBush.Ego.NefsLib.Tests
             UInt64 dataOffset,
             UInt32 extractedSize,
             IReadOnlyList<UInt32> chunkSizes,
-            NefsItemType type)
+            bool isDirectory = false)
         {
             var size = new NefsItemSize(extractedSize, chunkSizes);
             var dataSource = new NefsFileDataSource(@"C:\source.txt", dataOffset, size, extractedSize != chunkSizes.LastOrDefault());
@@ -65,24 +66,8 @@ namespace VictorBush.Ego.NefsLib.Tests
                 new NefsItemId(id),
                 fileName,
                 new NefsItemId(dirId),
-                type,
                 dataSource,
-                CreateUnknownData());
-        }
-
-        /// <summary>
-        /// Creates empty unknown header data.
-        /// </summary>
-        /// <returns>An empty <see cref="NefsItemUnknownData"/>.</returns>
-        internal static NefsItemUnknownData CreateUnknownData()
-        {
-            return new NefsItemUnknownData
-            {
-                Part6Unknown0x00 = 0,
-                Part6Unknown0x01 = 0,
-                Part6Unknown0x02 = 0,
-                Part6Unknown0x03 = 0,
-            };
+                isDirectory ? Part6Flags.IsDirectory : 0);
         }
     }
 }

@@ -36,11 +36,14 @@ namespace VictorBush.Ego.NefsLib.Header
 
             foreach (var item in items.EnumerateDepthFirstByName())
             {
-                var entry = new NefsHeaderPart6Entry(item.Id);
-                entry.Data0x00_Byte0.Value[0] = item.Part6Unknown0x00;
-                entry.Data0x01_Byte1.Value[0] = item.Part6Unknown0x01;
-                entry.Data0x02_Byte2.Value[0] = item.Part6Unknown0x02;
-                entry.Data0x03_Byte3.Value[0] = item.Part6Unknown0x03;
+                var flags = Part6Flags.None;
+                flags |= item.IsTransformed ? Part6Flags.IsTransformed : 0;
+                flags |= item.IsDirectory ? Part6Flags.IsDirectory : 0;
+                flags |= item.IsDuplicated ? Part6Flags.IsDuplicated : 0;
+                flags |= item.IsCacheable ? Part6Flags.IsCacheable : 0;
+                flags |= item.IsPatched ? Part6Flags.IsPatched : 0;
+
+                var entry = new NefsHeaderPart6Entry(item.Id, flags);
 
                 this.entriesByIndex.Add(entry);
                 this.entriesById.Add(item.Id, entry);
